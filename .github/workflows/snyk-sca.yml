@@ -12,15 +12,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Check Node Version
+        run: node --version
 
       - name: Install Dependencies
-        run: npm ci --ignore-scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Snyk SCA Scan
         uses: snyk/actions/node@master
@@ -30,7 +34,7 @@ jobs:
           args: --severity-threshold=high
 
       - name: Snyk Monitor
-        run: npx snyk monitor
+        if: always() && github.ref == 'refs/heads/master'
+        run: npx --yes snyk monitor
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        if: github.ref == 'refs/heads/master'
